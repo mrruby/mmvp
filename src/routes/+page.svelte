@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SignIn, SignOut } from '@auth/sveltekit/components';
+	import { SignOut } from '@auth/sveltekit/components';
 	import { page } from '$app/state';
 </script>
 
@@ -26,20 +26,6 @@
 						Sign out
 					</div>
 				</SignOut>
-			</div>
-		{:else}
-			<div class="text-center">
-				<h1 class="mb-6 text-2xl font-bold">Welcome</h1>
-				<div class="space-y-4">
-					<SignIn provider="facebook">
-						<div
-							slot="submitButton"
-							class="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
-						>
-							Sign in with Facebook
-						</div>
-					</SignIn>
-				</div>
 			</div>
 		{/if}
 	</div>
