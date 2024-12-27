@@ -1,39 +1,19 @@
 <script lang="ts">
 	import { SignOut } from '@auth/sveltekit/components';
-	import { page } from '$app/state';
+	import UserProfile from '$lib/components/UserProfile.svelte';
+	import AdAccounts from '$lib/components/AdAccounts.svelte';
+
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-gray-100">
 	<div class="rounded-lg bg-white p-8 shadow-md">
-		{#if page.data.session}
-			<div class="text-center">
-				{#if page.data.session.user?.image}
-					<img
-						src={page.data.session.user.image}
-						class="mx-auto mb-4 h-16 w-16 rounded-full"
-						alt="User Avatar"
-					/>
-				{/if}
-				<span class="mb-4 block">
-					<small class="text-gray-500">Signed in as</small><br />
-					<strong>{page.data.session.user?.name ?? 'User'}</strong>
-				</span>
+		{#if data.session}
+			<UserProfile user={data.session.user} />
+			<AdAccounts adAccounts={data.adAccounts} />
 
-				<div class="mb-4">
-					<h2 class="mb-2 text-xl font-bold">Your Facebook Pages</h2>
-					{#if page.data.pages.length > 0}
-						<ul class="space-y-2">
-							{#each page.data.pages as fbPage}
-								<li class="rounded bg-gray-50 p-2">
-									{fbPage.name}
-								</li>
-							{/each}
-						</ul>
-					{:else}
-						<p class="text-gray-500">No pages found</p>
-					{/if}
-				</div>
-
+			<div class="mt-6">
 				<SignOut>
 					<div
 						slot="submitButton"

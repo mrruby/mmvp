@@ -11,7 +11,9 @@ const auth = SvelteKitAuth(async () => {
 				clientId: AUTH_FACEBOOK_ID,
 				clientSecret: AUTH_FACEBOOK_SECRET,
 				authorization: {
-					params: { scope: 'email,ads_management,business_management,pages_show_list' }
+					params: {
+						scope: 'email,ads_management,ads_read,business_management,pages_show_list'
+					}
 				}
 			})
 		],
