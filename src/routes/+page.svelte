@@ -14,16 +14,18 @@
 
 			<AdAccounts adAccounts={data.adAccounts} />
 
-			<div class="mb-4 mt-4 text-center">
+			<div class="mx-auto mb-4 mt-4 max-w-md text-center">
 				<p class="mb-3 text-gray-600">
-					Can't see your ad accounts? You may need to relogin with additional permissions.
+					Nie widzisz swoich kont reklamowych? Możesz potrzebować zalogowania się z dodatkowymi
+					uprawnieniami.
 				</p>
+				<p class="mb-2 text-sm text-gray-500">Dodaj dodatkowe uprawnienia do swojego konta:</p>
 				<SignIn provider="facebook">
 					<div
 						slot="submitButton"
 						class="rounded bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
 					>
-						Relogin with full access
+						Zaloguj się jeszcze raz
 					</div>
 				</SignIn>
 			</div>
@@ -34,7 +36,7 @@
 						slot="submitButton"
 						class="rounded bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
 					>
-						Sign out
+						Wyloguj się
 					</div>
 				</SignOut>
 			</div>

@@ -6,7 +6,7 @@
 
 {#if adAccounts.length > 0}
 	<div class="mt-6">
-		<h2 class="mb-4 text-xl font-semibold">Ad Accounts</h2>
+		<h2 class="mb-4 text-xl font-semibold">Konta reklamowe</h2>
 		<div class="space-y-3">
 			{#each adAccounts as account}
 				<div class="rounded-md border border-gray-200 p-4">
@@ -14,14 +14,14 @@
 					<div class="text-sm text-gray-600">
 						ID: {account.account_id}
 						{#if account.business_name}
-							· Business: {account.business_name}
+							· Konto: {account.business_name}
 						{/if}
 						· {account.currency}
 					</div>
 					<div class="mt-2 text-sm">
 						{#if account.fundingSource?.funding_source_details}
 							<div class="flex items-center gap-2">
-								<span class="font-medium">Funding Source:</span>
+								<span class="font-medium">Podłączona karta:</span>
 								<span>{account.fundingSource.funding_source_details.display_string}</span>
 								<span
 									class="rounded-full px-2 py-0.5 text-xs {account.fundingSource
@@ -33,7 +33,7 @@
 								</span>
 							</div>
 						{:else}
-							<div class="text-gray-400">No funding source available</div>
+							<div class="text-gray-400">Brak podłączonej karty</div>
 						{/if}
 					</div>
 				</div>
@@ -41,5 +41,5 @@
 		</div>
 	</div>
 {:else}
-	<div class="mt-6 text-gray-600">No ad accounts found</div>
+	<div class="mt-6 text-gray-600">Brak konta reklamowego</div>
 {/if}
