@@ -1,9 +1,3 @@
-export interface FacebookPage {
-	id: string;
-	name: string;
-	access_token: string;
-}
-
 export interface AdAccount {
 	id: string;
 	account_id: string;

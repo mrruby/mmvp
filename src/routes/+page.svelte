@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SignOut } from '@auth/sveltekit/components';
+	import { SignOut, SignIn } from '@auth/sveltekit/components';
 	import UserProfile from '$lib/components/UserProfile.svelte';
 	import AdAccounts from '$lib/components/AdAccounts.svelte';
 
@@ -11,7 +11,22 @@
 	<div class="rounded-lg bg-white p-8 shadow-md">
 		{#if data.session}
 			<UserProfile user={data.session.user} />
+
 			<AdAccounts adAccounts={data.adAccounts} />
+
+			<div class="mb-4 mt-4 text-center">
+				<p class="mb-3 text-gray-600">
+					Can't see your ad accounts? You may need to relogin with additional permissions.
+				</p>
+				<SignIn provider="facebook">
+					<div
+						slot="submitButton"
+						class="rounded bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
+					>
+						Relogin with full access
+					</div>
+				</SignIn>
+			</div>
 
 			<div class="mt-6">
 				<SignOut>
