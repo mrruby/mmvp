@@ -167,7 +167,13 @@ export const createAdCreative = async (
 			page_id: params.pageId,
 			link_data: linkData
 		}),
-		enroll_status: params.enroll_status || 'OPT_OUT' // Default to OPT_OUT if not specified
+		degrees_of_freedom_spec: JSON.stringify({
+			creative_features_spec: {
+				standard_enhancements: {
+					enroll_status: params.enroll_status || 'OPT_OUT'
+				}
+			}
+		})
 	};
 
 	const response = await fetch(url, {
