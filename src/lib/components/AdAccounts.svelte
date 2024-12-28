@@ -1,45 +1,35 @@
 <script lang="ts">
 	import type { AdAccount } from '$lib/types/facebook';
 
-	let { adAccounts }: { adAccounts: AdAccount[] } = $props();
+	export let adAccounts: AdAccount[];
 </script>
 
-{#if adAccounts.length > 0}
-	<div class="mt-6">
-		<h2 class="mb-4 text-xl font-semibold">Konta reklamowe</h2>
-		<div class="space-y-3">
+<div class="mt-6">
+	<h2 class="mb-4 text-xl font-semibold">Twoje konta reklamowe</h2>
+	{#if adAccounts.length > 0}
+		<div class="space-y-4">
 			{#each adAccounts as account}
-				<div class="rounded-md border border-gray-200 p-4">
-					<div class="font-medium">{account.name}</div>
-					<div class="text-sm text-gray-600">
-						ID: {account.account_id}
-						{#if account.business_name}
-							· Konto: {account.business_name}
-						{/if}
-						· {account.currency}
-					</div>
-					<div class="mt-2 text-sm">
-						{#if account.fundingSource?.funding_source_details}
-							<div class="flex items-center gap-2">
-								<span class="font-medium">Podłączona karta:</span>
-								<span>{account.fundingSource.funding_source_details.display_string}</span>
-								<span
-									class="rounded-full px-2 py-0.5 text-xs {account.fundingSource
-										.funding_source_details.status === 'active'
-										? 'bg-green-100 text-green-800'
-										: 'bg-red-100 text-red-800'}"
-								>
-									{account.fundingSource.funding_source_details.status}
-								</span>
-							</div>
-						{:else}
-							<div class="text-gray-400">Brak podłączonej karty</div>
-						{/if}
+				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+					<div class="flex items-center justify-between">
+						<div>
+							<h3 class="font-medium text-gray-900">{account.name}</h3>
+							<p class="text-sm text-gray-500">ID: {account.account_id}</p>
+							{#if account.business_name}
+								<p class="text-sm text-gray-500">Firma: {account.business_name}</p>
+							{/if}
+							<p class="text-sm text-gray-500">Waluta: {account.currency}</p>
+						</div>
+						<a
+							href="/campaign/create/{account.id}"
+							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+						>
+							Utwórz kampanię
+						</a>
 					</div>
 				</div>
 			{/each}
 		</div>
-	</div>
-{:else}
-	<div class="mt-6 text-gray-600">Brak konta reklamowego</div>
-{/if}
+	{:else}
+		<p class="text-gray-500">Nie znaleziono żadnych kont reklamowych.</p>
+	{/if}
+</div>
