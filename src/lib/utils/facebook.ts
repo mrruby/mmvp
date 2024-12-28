@@ -61,6 +61,14 @@ interface CreateAdCreativeParams {
 	message: string;
 	link: string;
 	imageHash?: string;
+	call_to_action?: {
+		type: string;
+		value: {
+			link: string;
+			[key: string]: string;
+		};
+	};
+	enroll_status?: 'OPT_OUT' | 'OPT_IN';
 }
 
 interface CreateAdParams {
@@ -149,18 +157,25 @@ export const createAdCreative = async (
 		linkData.image_hash = params.imageHash;
 	}
 
+	if (params.call_to_action) {
+		linkData.call_to_action = params.call_to_action;
+	}
+
+	const requestBody: Record<string, string> = {
+		name: params.name,
+		object_story_spec: JSON.stringify({
+			page_id: params.pageId,
+			link_data: linkData
+		}),
+		enroll_status: params.enroll_status || 'OPT_OUT' // Default to OPT_OUT if not specified
+	};
+
 	const response = await fetch(url, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded'
 		},
-		body: new URLSearchParams({
-			name: params.name,
-			object_story_spec: JSON.stringify({
-				page_id: params.pageId,
-				link_data: linkData
-			})
-		}).toString()
+		body: new URLSearchParams(requestBody).toString()
 	});
 
 	if (!response.ok) {
