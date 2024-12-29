@@ -1,13 +1,19 @@
-import { buildFacebookUrl, postToFacebook } from './client';
+import type { RequestEvent } from '@sveltejs/kit';
 
 export const uploadAdImage = async (
-	accessToken: string,
+	event: RequestEvent,
 	adAccountId: string,
 	imageData: string
 ): Promise<{ hash: string }> => {
-	const url = buildFacebookUrl(`/${adAccountId}/adimages`, '', accessToken);
-	const response = await postToFacebook<{ images: { bytes: { hash: string } } }>(url, {
-		bytes: imageData
-	});
+	if (!event.locals.facebook) {
+		throw new Error('Facebook service not available');
+	}
+
+	const response = await event.locals.facebook.post<{ images: { bytes: { hash: string } } }>(
+		`/${adAccountId}/adimages`,
+		{
+			bytes: imageData
+		}
+	);
 	return { hash: response.images?.bytes?.hash };
 };

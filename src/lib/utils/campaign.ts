@@ -1,34 +1,31 @@
-import { createCampaign, createAdSet, createAdCreative, createAd, uploadAdImage } from './facebook';
+import { createCampaign, createAdSet, createAdCreative, createAd } from './facebook/ads';
+import { uploadAdImage } from './facebook/media';
+import { type CampaignData, campaignDataSchema } from '$lib/schemas/campaign';
+import type { RequestEvent } from '@sveltejs/kit';
 
-export type CampaignData = {
-	adAccountId: string;
-	campaignName: string;
-	dailyBudget: string;
-	pageId: string;
-	message: string;
-	link: string;
-	imageFile: File | null;
-	accessToken: string;
+export const validateCampaignData = (data: unknown): data is CampaignData => {
+	try {
+		campaignDataSchema.parse(data);
+		return true;
+	} catch {
+		return false;
+	}
 };
 
-export const validateCampaignData = (data: Partial<CampaignData>): data is CampaignData => {
-	const { adAccountId, campaignName, dailyBudget, pageId, message, link } = data;
-	return !!(adAccountId && campaignName && dailyBudget && pageId && message && link);
-};
-
-export const createFullCampaign = async (data: CampaignData) => {
-	const { accessToken, adAccountId, campaignName, dailyBudget, pageId, message, link, imageFile } =
-		data;
+export const createFullCampaign = async (event: RequestEvent, data: CampaignData) => {
+	const validatedData = campaignDataSchema.parse(data);
+	const { adAccountId, campaignName, dailyBudget, pageId, message, link, imageFile } =
+		validatedData;
 
 	// Create campaign
-	const campaign = await createCampaign(accessToken, adAccountId, {
+	const campaign = await createCampaign(event, adAccountId, {
 		name: campaignName,
 		objective: 'OUTCOME_TRAFFIC',
 		status: 'PAUSED'
 	});
 
 	// Create ad set
-	const adSet = await createAdSet(accessToken, adAccountId, {
+	const adSet = await createAdSet(event, adAccountId, {
 		name: `${campaignName} - Zestaw reklam`,
 		campaignId: campaign.id,
 		dailyBudget: (parseFloat(dailyBudget) * 100).toString(),
@@ -46,12 +43,12 @@ export const createFullCampaign = async (data: CampaignData) => {
 		const base64Image = btoa(
 			new Uint8Array(imageBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
 		);
-		const uploadResult = await uploadAdImage(accessToken, adAccountId, base64Image);
+		const uploadResult = await uploadAdImage(event, adAccountId, base64Image);
 		imageHash = uploadResult.hash;
 	}
 
 	// Create ad creative
-	const creative = await createAdCreative(accessToken, adAccountId, {
+	const creative = await createAdCreative(event, adAccountId, {
 		name: `${campaignName} - Kreacja`,
 		pageId,
 		message,
@@ -60,7 +57,7 @@ export const createFullCampaign = async (data: CampaignData) => {
 	});
 
 	// Create ad
-	return createAd(accessToken, adAccountId, {
+	return createAd(event, adAccountId, {
 		name: `${campaignName} - Reklama`,
 		adsetId: adSet.id,
 		creativeId: creative.id

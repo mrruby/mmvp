@@ -34,6 +34,7 @@
 	},
 	"dependencies": {
 		"@auth/core": "^0.37.4",
-		"@auth/sveltekit": "^1.7.4"
+		"@auth/sveltekit": "^1.7.4",
+		"zod": "^3.24.1"
 	}
 }

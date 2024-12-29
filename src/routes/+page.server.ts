@@ -2,25 +2,24 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { fetchAdAccounts, fetchFundingSource } from '$lib/utils/facebook';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const session = await locals.auth();
+export const load: PageServerLoad = async (event) => {
+	const session = await event.locals.auth();
 
 	if (!session) {
 		throw redirect(303, '/signin');
 	}
 
-	const accessToken = session.accessToken;
-	if (!accessToken) {
+	if (!event.locals.facebook) {
 		return {
 			session,
 			adAccounts: []
 		};
 	}
 
-	const adAccounts = await fetchAdAccounts(accessToken);
+	const adAccounts = await fetchAdAccounts(event);
 	const accountsWithFunding = await Promise.all(
 		adAccounts.map(async (account) => {
-			const fundingData = await fetchFundingSource(accessToken, account.id);
+			const fundingData = await fetchFundingSource(event, account.id);
 			return {
 				...account,
 				fundingSource: fundingData

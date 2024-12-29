@@ -1,32 +1,48 @@
-import type { AdAccount, FundingSource } from '$lib/types/facebook';
-import { buildFacebookUrl, fetchFromFacebook } from './client';
+import { adAccountSchema, facebookPageSchema, fundingSourceSchema } from '$lib/schemas/facebook';
+import type { RequestEvent } from '@sveltejs/kit';
+import { z } from 'zod';
 
-export const fetchAdAccounts = async (accessToken: string): Promise<AdAccount[]> => {
-	const url = buildFacebookUrl(
+export const fetchAdAccounts = async (event: RequestEvent) => {
+	if (!event.locals.facebook) {
+		throw new Error('Facebook service not available');
+	}
+
+	const response = await event.locals.facebook.get<unknown>(
 		'/me/adaccounts',
-		'id,account_id,name,currency,business_name',
-		accessToken
+		'id,account_id,name,currency,business_name'
 	);
-	const response = await fetchFromFacebook<{ data: AdAccount[] }>(url);
-	return response.data ?? [];
+
+	const schema = z.object({ data: z.array(adAccountSchema) });
+	const validated = schema.parse(response);
+	return validated.data ?? [];
 };
 
-export const fetchFundingSource = async (
-	accessToken: string,
-	adAccountId: string
-): Promise<FundingSource> => {
-	const url = buildFacebookUrl(`/${adAccountId}`, 'funding_source_details', accessToken);
-	return fetchFromFacebook<FundingSource>(url);
+export const fetchFundingSource = async (event: RequestEvent, adAccountId: string) => {
+	if (!event.locals.facebook) {
+		throw new Error('Facebook service not available');
+	}
+
+	try {
+		const response = await event.locals.facebook.get<unknown>(
+			`/${adAccountId}`,
+			'funding_source_details'
+		);
+		return fundingSourceSchema.parse(response);
+	} catch (error) {
+		if (error instanceof Error && error.message.includes('Permission Denied')) {
+			return null;
+		}
+		throw error;
+	}
 };
 
-export interface FacebookPage {
-	id: string;
-	name: string;
-	access_token: string;
-}
+export const fetchPages = async (event: RequestEvent) => {
+	if (!event.locals.facebook) {
+		throw new Error('Facebook service not available');
+	}
 
-export const fetchPages = async (accessToken: string): Promise<FacebookPage[]> => {
-	const url = buildFacebookUrl('/me/accounts', 'id,name,access_token', accessToken);
-	const response = await fetchFromFacebook<{ data: FacebookPage[] }>(url);
-	return response.data ?? [];
+	const response = await event.locals.facebook.get<unknown>('/me/accounts', 'id,name,access_token');
+	const schema = z.object({ data: z.array(facebookPageSchema) });
+	const validated = schema.parse(response);
+	return validated.data ?? [];
 };

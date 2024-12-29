@@ -19,7 +19,6 @@ const auth = SvelteKitAuth(async () => {
 		],
 		callbacks: {
 			jwt: async ({ token, account }: { token: JWT; account?: Account | null }) => {
-				// Persist the access_token in the token right after signin
 				if (account) {
 					token.accessToken = account.access_token;
 				}
