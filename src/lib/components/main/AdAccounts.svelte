@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { AdAccount } from '$lib/types/facebook';
-
-	export let adAccounts: AdAccount[];
+	let { adAccounts }: { adAccounts: AdAccount[] } = $props();
 </script>
 
 <div class="mt-6">

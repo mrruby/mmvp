@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SignOut, SignIn } from '@auth/sveltekit/components';
-	import UserProfile from '$lib/components/UserProfile.svelte';
-	import AdAccounts from '$lib/components/AdAccounts.svelte';
+	import UserProfile from '$lib/components/main/UserProfile.svelte';
+	import AdAccounts from '$lib/components/main/AdAccounts.svelte';
 
 	/** @type {{ data: import('./$types').PageData }} */
 	let { data } = $props();
