@@ -20,9 +20,10 @@ export const createAdSetParamsSchema = z.object({
 	name: z.string(),
 	campaignId: z.string(),
 	dailyBudget: z.string(),
-	targeting: z.record(z.unknown()),
-	billing_event: z.enum(['IMPRESSIONS', 'LINK_CLICKS']),
-	bid_strategy: z.enum(['LOWEST_COST_WITHOUT_CAP', 'LOWEST_COST_WITH_BID_CAP'])
+	destination_type: z.enum(['INSTAGRAM_PROFILE']),
+	targeting: z.object({
+		geo_locations: z.record(z.unknown())
+	})
 });
 
 export const createAdCreativeParamsSchema = z.object({
@@ -31,6 +32,7 @@ export const createAdCreativeParamsSchema = z.object({
 	message: z.string(),
 	link: z.string(),
 	imageHash: z.string().optional(),
+	instagram_actor_id: z.string().optional(),
 	call_to_action: z
 		.object({
 			type: z.string(),

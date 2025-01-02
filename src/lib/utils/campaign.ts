@@ -20,7 +20,7 @@ export const createFullCampaign = async (event: RequestEvent, data: CampaignData
 	// Create campaign
 	const campaign = await createCampaign(event, adAccountId, {
 		name: campaignName,
-		objective: 'OUTCOME_TRAFFIC',
+		objective: 'OUTCOME_ENGAGEMENT',
 		status: 'PAUSED'
 	});
 
@@ -32,8 +32,7 @@ export const createFullCampaign = async (event: RequestEvent, data: CampaignData
 		targeting: {
 			geo_locations: { countries: ['PL'] }
 		},
-		billing_event: 'IMPRESSIONS',
-		bid_strategy: 'LOWEST_COST_WITHOUT_CAP'
+		destination_type: 'INSTAGRAM_PROFILE'
 	});
 
 	// Handle image upload if provided
@@ -53,7 +52,14 @@ export const createFullCampaign = async (event: RequestEvent, data: CampaignData
 		pageId,
 		message,
 		link,
-		imageHash
+		imageHash,
+		instagram_actor_id: pageId,
+		call_to_action: {
+			type: 'LEARN_MORE',
+			value: {
+				link
+			}
+		}
 	});
 
 	// Create ad
