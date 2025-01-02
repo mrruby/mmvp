@@ -27,6 +27,7 @@ export const fetchFundingSource = async (event: RequestEvent, adAccountId: strin
 			`/${adAccountId}`,
 			'funding_source_details'
 		);
+
 		return fundingSourceSchema.parse(response);
 	} catch (error) {
 		if (error instanceof Error && error.message.includes('Permission Denied')) {

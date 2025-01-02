@@ -22,14 +22,12 @@ export const load: PageServerLoad = async (event) => {
 			const fundingData = await fetchFundingSource(event, account.id);
 			return {
 				...account,
-				fundingSource: fundingData
+				...fundingData
 			};
 		})
 	);
 
-	const filteredAccounts = accountsWithFunding.filter(
-		(account) => account.fundingSource?.funding_source_details
-	);
+	const filteredAccounts = accountsWithFunding.filter((account) => account.funding_source_details);
 
 	return {
 		session,
