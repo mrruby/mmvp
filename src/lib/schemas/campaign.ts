@@ -5,8 +5,9 @@ export const campaignDataSchema = z.object({
 	campaignName: z.string(),
 	dailyBudget: z.string(),
 	pageId: z.string(),
+	instagramAccountId: z.string(),
+	instagramUsername: z.string(),
 	message: z.string(),
-	link: z.string(),
 	imageFile: z.instanceof(File).nullable()
 });
 
@@ -22,24 +23,22 @@ export const createAdSetParamsSchema = z.object({
 	dailyBudget: z.string(),
 	destination_type: z.enum(['INSTAGRAM_PROFILE']),
 	targeting: z.object({
-		geo_locations: z.record(z.unknown())
+		geo_locations: z.record(z.unknown()),
+		publisher_platforms: z.array(z.enum(['instagram']))
 	})
 });
 
 export const createAdCreativeParamsSchema = z.object({
 	name: z.string(),
-	pageId: z.string(),
-	message: z.string(),
-	link: z.string(),
-	imageHash: z.string().optional(),
-	instagram_actor_id: z.string().optional(),
-	call_to_action: z
-		.object({
-			type: z.string(),
-			value: z.record(z.string())
+	object_story_spec: z.object({
+		page_id: z.string(),
+		instagram_actor_id: z.string(),
+		instagram_username: z.string(),
+		link_data: z.object({
+			image_hash: z.string().optional(),
+			message: z.string()
 		})
-		.optional(),
-	enroll_status: z.enum(['OPT_OUT', 'OPT_IN']).optional()
+	})
 });
 
 export const createAdParamsSchema = z.object({

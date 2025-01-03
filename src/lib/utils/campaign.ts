@@ -14,13 +14,13 @@ export const validateCampaignData = (data: unknown): data is CampaignData => {
 
 export const createFullCampaign = async (event: RequestEvent, data: CampaignData) => {
 	const validatedData = campaignDataSchema.parse(data);
-	const { adAccountId, campaignName, dailyBudget, pageId, message, link, imageFile } =
+	const { adAccountId, campaignName, dailyBudget, instagramAccountId, message, imageFile, pageId } =
 		validatedData;
 
 	// Create campaign
 	const campaign = await createCampaign(event, adAccountId, {
 		name: campaignName,
-		objective: 'OUTCOME_ENGAGEMENT',
+		objective: 'OUTCOME_TRAFFIC',
 		status: 'PAUSED'
 	});
 
@@ -30,7 +30,8 @@ export const createFullCampaign = async (event: RequestEvent, data: CampaignData
 		campaignId: campaign.id,
 		dailyBudget: (parseFloat(dailyBudget) * 100).toString(),
 		targeting: {
-			geo_locations: { countries: ['PL'] }
+			geo_locations: { countries: ['PL'] },
+			publisher_platforms: ['instagram']
 		},
 		destination_type: 'INSTAGRAM_PROFILE'
 	});
@@ -49,15 +50,13 @@ export const createFullCampaign = async (event: RequestEvent, data: CampaignData
 	// Create ad creative
 	const creative = await createAdCreative(event, adAccountId, {
 		name: `${campaignName} - Kreacja`,
-		pageId,
-		message,
-		link,
-		imageHash,
-		instagram_actor_id: pageId,
-		call_to_action: {
-			type: 'LEARN_MORE',
-			value: {
-				link
+		object_story_spec: {
+			page_id: pageId,
+			instagram_actor_id: instagramAccountId,
+			instagram_username: validatedData.instagramUsername,
+			link_data: {
+				image_hash: imageHash,
+				message
 			}
 		}
 	});

@@ -34,6 +34,7 @@ const postData = async <T>(url: string, params: Record<string, string | undefine
 	if (!response.ok) {
 		throw new Error(`Facebook API error: ${await response.text()}`);
 	}
+
 	return response.json();
 };
 

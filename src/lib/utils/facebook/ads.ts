@@ -49,10 +49,12 @@ export const createAdSet = async (
 		name: validatedParams.name,
 		campaign_id: validatedParams.campaignId,
 		daily_budget: validatedParams.dailyBudget,
-		billing_event: validatedParams.billing_event,
-		bid_strategy: validatedParams.bid_strategy,
+		bid_amount: '2',
+		billing_event: 'IMPRESSIONS',
+		destination_type: validatedParams.destination_type,
 		targeting: JSON.stringify(validatedParams.targeting),
-		status: 'PAUSED'
+		status: 'PAUSED',
+		optimization_goal: 'LINK_CLICKS'
 	});
 	return responseSchema.parse(response);
 };
@@ -67,29 +69,25 @@ export const createAdCreative = async (
 	}
 
 	const validatedParams = createAdCreativeParamsSchema.parse(params);
-	const linkData: Record<string, unknown> = {
-		message: validatedParams.message,
-		link: validatedParams.link
-	};
-
-	if (validatedParams.imageHash) {
-		linkData.image_hash = validatedParams.imageHash;
-	}
-
-	if (validatedParams.call_to_action) {
-		linkData.call_to_action = validatedParams.call_to_action;
-	}
 
 	const response = await event.locals.facebook.post(`/${adAccountId}/adcreatives`, {
 		name: validatedParams.name,
 		object_story_spec: JSON.stringify({
-			page_id: validatedParams.pageId,
-			link_data: linkData
+			instagram_actor_id: validatedParams.object_story_spec.instagram_actor_id,
+			page_id: validatedParams.object_story_spec.page_id,
+			link_data: {
+				image_hash: validatedParams.object_story_spec.link_data.image_hash,
+				message: validatedParams.object_story_spec.link_data.message,
+				call_to_action: {
+					type: 'VIEW_INSTAGRAM_PROFILE'
+				},
+				link: `https://www.instagram.com/${validatedParams.object_story_spec.instagram_username}/`
+			}
 		}),
 		degrees_of_freedom_spec: JSON.stringify({
 			creative_features_spec: {
 				standard_enhancements: {
-					enroll_status: validatedParams.enroll_status || 'OPT_OUT'
+					enroll_status: 'OPT_OUT'
 				}
 			}
 		})

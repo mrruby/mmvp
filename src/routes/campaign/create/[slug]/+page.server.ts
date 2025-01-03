@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { fetchPages } from '$lib/utils/facebook';
+import { fetchInstagramAccounts, fetchPages } from '$lib/utils/facebook';
 import { createFullCampaign, validateCampaignData } from '$lib/utils/campaign';
 
 export const load: PageServerLoad = async (event) => {
@@ -16,7 +16,9 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	const pages = await fetchPages(event);
-	return { adAccountId, pages };
+
+	const instagramAccounts = await fetchInstagramAccounts(event);
+	return { adAccountId, pages, instagramAccounts };
 };
 
 export const actions: Actions = {
@@ -27,13 +29,20 @@ export const actions: Actions = {
 		}
 
 		const formData = await event.request.formData();
+		const instagramAccountId = formData.get('instagramAccountId')?.toString();
+
+		// Get Instagram accounts to find username
+		const instagramAccounts = await fetchInstagramAccounts(event);
+		const instagramAccount = instagramAccounts.find((account) => account.id === instagramAccountId);
+
 		const campaignData = {
 			adAccountId: formData.get('adAccountId')?.toString(),
 			campaignName: formData.get('campaignName')?.toString(),
 			dailyBudget: formData.get('dailyBudget')?.toString(),
 			pageId: formData.get('pageId')?.toString(),
+			instagramAccountId,
+			instagramUsername: instagramAccount?.name,
 			message: formData.get('message')?.toString(),
-			link: formData.get('link')?.toString(),
 			imageFile: formData.get('image') as File | null
 		};
 

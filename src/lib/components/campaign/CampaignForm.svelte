@@ -4,8 +4,15 @@
 	import ImageUpload from './ImageUpload.svelte';
 	import StatusMessage from './StatusMessage.svelte';
 
-	let { data }: { data: { adAccountId: string; pages: Array<{ id: string; name: string }> } } =
-		$props();
+	let {
+		data
+	}: {
+		data: {
+			adAccountId: string;
+			instagramAccounts: Array<{ id: string; name: string }>;
+			pages: Array<{ id: string; name: string }>;
+		};
+	} = $props();
 
 	let loading = $state(false);
 	let error = $state<string | null>(null);
@@ -14,7 +21,7 @@
 </script>
 
 <div class="mx-auto max-w-2xl p-4">
-	<h1 class="mb-6 text-2xl font-bold">Utwórz nową kampanię</h1>
+	<h1 class="mb-6 text-2xl font-bold">Utwórz nową kampanię na Instagram</h1>
 
 	<form
 		method="POST"
@@ -42,7 +49,7 @@
 			label="Nazwa kampanii"
 			id="campaignName"
 			required={true}
-			placeholder="Moja nowa kampania"
+			placeholder="Moja nowa kampania na Instagram"
 		/>
 
 		<FormField
@@ -57,11 +64,21 @@
 		/>
 
 		<FormField
+			label="Konto na Instagramie"
+			id="instagramAccountId"
+			type="select"
+			required={true}
+			options={data.instagramAccounts}
+			helpText="Wybierz konto na Instagramie, które będzie używane do reklamy"
+		/>
+
+		<FormField
 			label="Strona na Facebooku"
 			id="pageId"
 			type="select"
 			required={true}
 			options={data.pages}
+			helpText="Wybierz stronę na Facebooku, która będzie używana do reklamy"
 		/>
 
 		<FormField
@@ -70,14 +87,6 @@
 			type="textarea"
 			required={true}
 			placeholder="Wprowadź treść swojej reklamy..."
-		/>
-
-		<FormField
-			label="Adres URL docelowy"
-			id="link"
-			type="url"
-			required={true}
-			placeholder="https://twoja-strona.pl"
 		/>
 
 		<ImageUpload bind:imagePreview />
