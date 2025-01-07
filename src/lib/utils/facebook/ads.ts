@@ -122,7 +122,7 @@ export const fetchCampaigns = async (event: RequestEvent, adAccountId: string) =
 
 	const response = await event.locals.facebook.get<unknown>(
 		`/${adAccountId}/campaigns`,
-		'id,name,status,effective_status,adsets{destination_type}'
+		'id,name,status,effective_status,adsets{destination_type},ads{creative{id,object_story_spec{link_data{image_url}}}}'
 	);
 
 	const validated = campaignListSchema.parse(response);
@@ -132,8 +132,6 @@ export const fetchCampaigns = async (event: RequestEvent, adAccountId: string) =
 		(campaign) =>
 			campaign.adsets?.data.some((adset) => adset.destination_type === 'INSTAGRAM_PROFILE') ?? false
 	);
-
-	console.log(JSON.stringify(instagramCampaigns, null, 2));
 
 	return instagramCampaigns;
 };
