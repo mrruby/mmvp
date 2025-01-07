@@ -2,7 +2,6 @@ import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { fetchInstagramAccounts, fetchPages } from '$lib/utils/facebook';
 import { createFullCampaign, validateCampaignData } from '$lib/utils/campaign';
-import { applyAction } from '$app/forms';
 
 export const load: PageServerLoad = async (event) => {
 	const session = await event.locals.auth();
@@ -48,24 +47,15 @@ export const actions: Actions = {
 		};
 
 		if (!validateCampaignData(campaignData)) {
-			return applyAction({
-				status: 400,
-				type: 'error',
-				error: new Error('Brakujące wymagane pola')
-			});
+			throw error(400, 'Brakujące wymagane pola');
 		}
 
 		try {
-			await createFullCampaign(event, campaignData);
+			// await createFullCampaign(event, campaignData);
+			return { success: true };
 		} catch (err) {
 			console.error('Błąd podczas tworzenia kampanii:', err);
-			return applyAction({
-				status: 500,
-				type: 'error',
-				error: new Error('Nie udało się utworzyć kampanii')
-			});
+			throw error(500, 'Nie udało się utworzyć kampanii');
 		}
-
-		return redirect(303, '/');
 	}
 };

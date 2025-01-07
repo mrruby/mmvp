@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import FormField from './FormField.svelte';
 	import ImageUpload from './ImageUpload.svelte';
 	import StatusMessage from './StatusMessage.svelte';
@@ -35,6 +36,7 @@
 					error = result.error.message;
 				} else {
 					imagePreview = null;
+					await goto('/');
 				}
 			};
 		}}
