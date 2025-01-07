@@ -52,8 +52,11 @@ export const actions: Actions = {
 
 		try {
 			await createFullCampaign(event, campaignData);
-			return { success: true };
+			throw redirect(303, '/');
 		} catch (err) {
+			if (err instanceof Error && 'status' in err && err.status === 303) {
+				throw err;
+			}
 			console.error('Błąd podczas tworzenia kampanii:', err);
 			throw error(500, 'Nie udało się utworzyć kampanii');
 		}

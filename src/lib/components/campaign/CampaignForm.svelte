@@ -16,7 +16,6 @@
 
 	let loading = $state(false);
 	let error = $state<string | null>(null);
-	let success = $state(false);
 	let imagePreview = $state<string | null>(null);
 </script>
 
@@ -29,14 +28,12 @@
 		use:enhance={() => {
 			loading = true;
 			error = null;
-			success = false;
 
 			return async ({ result }) => {
 				loading = false;
 				if (result.type === 'error') {
 					error = result.error.message;
 				} else {
-					success = true;
 					imagePreview = null;
 				}
 			};
@@ -101,10 +98,6 @@
 
 		{#if error}
 			<StatusMessage type="error" message={error} />
-		{/if}
-
-		{#if success}
-			<StatusMessage type="success" message="Kampania została utworzona pomyślnie!" />
 		{/if}
 	</form>
 </div>
