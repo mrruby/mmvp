@@ -45,8 +45,29 @@ export const instagramAccountSchema = z.object({
 	)
 });
 
+export const campaignListSchema = z.object({
+	data: z.array(
+		z.object({
+			id: z.string(),
+			name: z.string(),
+			status: z.enum(['ACTIVE', 'PAUSED', 'DELETED', 'ARCHIVED']),
+			effective_status: z.string(),
+			adsets: z
+				.object({
+					data: z.array(
+						z.object({
+							destination_type: z.string()
+						})
+					)
+				})
+				.optional()
+		})
+	)
+});
+
 export type AdAccount = z.infer<typeof adAccountSchema>;
 export type FundingSource = z.infer<typeof fundingSourceSchema>;
 export type FacebookPage = z.infer<typeof facebookPageSchema>;
 export type Business = z.infer<typeof businessSchema>;
 export type InstagramAccount = z.infer<typeof instagramAccountSchema>;
+export type CampaignList = z.infer<typeof campaignListSchema>;

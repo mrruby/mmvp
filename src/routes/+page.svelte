@@ -2,6 +2,7 @@
 	import { SignOut, SignIn } from '@auth/sveltekit/components';
 	import UserProfile from '$lib/components/main/UserProfile.svelte';
 	import AdAccounts from '$lib/components/main/AdAccounts.svelte';
+	import Campaigns from '$lib/components/main/Campaigns.svelte';
 
 	/** @type {{ data: import('./$types').PageData }} */
 	let { data } = $props();
@@ -13,6 +14,10 @@
 			<UserProfile user={data.session.user} />
 
 			<AdAccounts adAccounts={data.adAccounts} />
+
+			{#each data.adAccounts as account}
+				<Campaigns campaigns={account.campaigns} adAccountId={account.id} />
+			{/each}
 
 			<div class="mx-auto mb-4 mt-4 max-w-md text-center">
 				<p class="mb-3 text-gray-600">

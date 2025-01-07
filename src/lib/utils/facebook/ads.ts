@@ -9,6 +9,7 @@ import {
 	createAdCreativeParamsSchema,
 	createAdParamsSchema
 } from '$lib/schemas/campaign';
+import { campaignListSchema } from '$lib/schemas/facebook';
 import { z } from 'zod';
 
 const responseSchema = z.object({
@@ -112,4 +113,39 @@ export const createAd = async (
 		status: 'PAUSED'
 	});
 	return responseSchema.parse(response);
+};
+
+export const fetchCampaigns = async (event: RequestEvent, adAccountId: string) => {
+	if (!event.locals.facebook) {
+		throw new Error('Facebook service not available');
+	}
+
+	const response = await event.locals.facebook.get<unknown>(
+		`/${adAccountId}/campaigns`,
+		'id,name,status,effective_status,adsets{destination_type}'
+	);
+
+	const validated = campaignListSchema.parse(response);
+
+	// Filter campaigns that have at least one adset with INSTAGRAM_PROFILE destination type
+	const instagramCampaigns = validated.data.filter(
+		(campaign) =>
+			campaign.adsets?.data.some((adset) => adset.destination_type === 'INSTAGRAM_PROFILE') ?? false
+	);
+
+	console.log(JSON.stringify(instagramCampaigns, null, 2));
+
+	return instagramCampaigns;
+};
+
+export const deleteCampaign = async (event: RequestEvent, campaignId: string) => {
+	if (!event.locals.facebook) {
+		throw new Error('Facebook service not available');
+	}
+
+	const response = await event.locals.facebook.post<{ success: boolean }>(`/${campaignId}`, {
+		status: 'DELETED'
+	});
+
+	return response.success;
 };
