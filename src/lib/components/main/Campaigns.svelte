@@ -14,9 +14,10 @@
 				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
 					<div class="flex items-start justify-between">
 						<div class="flex items-start space-x-4">
-							{#if campaign.ads?.data[0]?.creative?.object_story_spec?.link_data?.image_url}
+							{#if campaign.ads?.data[0]?.creative?.thumbnail_url || campaign.ads?.data[0]?.creative?.image_url}
 								<img
-									src={campaign.ads.data[0].creative.object_story_spec.link_data.image_url}
+									src={campaign.ads.data[0].creative.thumbnail_url ??
+										campaign.ads.data[0].creative.image_url}
 									alt={campaign.name}
 									class="h-24 w-24 rounded-lg object-cover"
 								/>

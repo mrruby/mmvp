@@ -65,14 +65,16 @@ export const campaignListSchema = z.object({
 				.object({
 					data: z.array(
 						z.object({
-							creative: z.object({
-								id: z.string(),
-								object_story_spec: z.object({
-									link_data: z.object({
-										image_url: z.string().optional()
-									})
+							creative: z
+								.object({
+									id: z.string(),
+									thumbnail_url: z.string().optional(),
+									image_url: z.string().optional(),
+									body: z.string().optional(),
+									object_story_spec: z.record(z.unknown()).optional(),
+									asset_feed_spec: z.record(z.unknown()).optional()
 								})
-							})
+								.optional()
 						})
 					)
 				})
