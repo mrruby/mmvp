@@ -51,7 +51,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			// await createFullCampaign(event, campaignData);
+			await createFullCampaign(event, campaignData);
 			return { success: true };
 		} catch (err) {
 			console.error('Błąd podczas tworzenia kampanii:', err);
