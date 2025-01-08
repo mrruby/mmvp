@@ -58,9 +58,6 @@
 											</span>
 										{/if}
 									</span>
-									<span class="text-sm text-gray-500">
-										Status efektywny: {translateStatus(campaign.effective_status)}
-									</span>
 								</div>
 							</div>
 						</div>
