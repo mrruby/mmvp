@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const fundingSourceDetailsSchema = z.object({
-	id: z.string(),
+	id: z.string().optional(),
 	display_string: z.string().optional(),
-	type: z.number(),
+	type: z.number().optional(),
 	status: z.string().optional()
 });
 
