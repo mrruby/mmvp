@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { fetchInstagramAccounts, fetchPages } from '$lib/utils/facebook';
 import { createFullCampaign, validateCampaignData } from '$lib/utils/campaign';
 

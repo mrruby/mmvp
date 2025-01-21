@@ -9,13 +9,7 @@ import {
 	createAdCreativeParamsSchema,
 	createAdParamsSchema
 } from '$lib/schemas/campaign';
-import { campaignListSchema } from '$lib/schemas/facebook';
-import { z } from 'zod';
-
-const responseSchema = z.object({
-	id: z.string(),
-	success: z.boolean().optional()
-});
+import { campaignListSchema, responseSchema } from '$lib/schemas/facebook';
 
 export const createCampaign = async (
 	event: RequestEvent,
@@ -146,4 +140,66 @@ export const deleteCampaign = async (event: RequestEvent, campaignId: string) =>
 	});
 
 	return response.success;
+};
+
+export const createExistingPostCampaign = async (
+	event: RequestEvent,
+	adAccountId: string,
+	params: {
+		postId: string;
+		name: string;
+		dailyBudget: string;
+	}
+) => {
+	if (!event.locals.facebook) {
+		throw new Error('Facebook service not available');
+	}
+
+	// Create campaign
+	const campaignResponse = await event.locals.facebook.post<unknown>(`/${adAccountId}/campaigns`, {
+		name: params.name,
+		objective: 'POST_ENGAGEMENT',
+		status: 'PAUSED',
+		special_ad_categories: '[]'
+	});
+	const campaign = responseSchema.parse(campaignResponse);
+
+	// Create ad set
+	const adSetResponse = await event.locals.facebook.post<unknown>(`/${adAccountId}/adsets`, {
+		campaign_id: campaign.id,
+		name: `${params.name} Ad Set`,
+		optimization_goal: 'POST_ENGAGEMENT',
+		billing_event: 'IMPRESSIONS',
+		bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
+		daily_budget: (Number(params.dailyBudget) * 100).toString(), // Convert to cents
+		targeting: JSON.stringify({
+			age_min: 18,
+			age_max: 65,
+			genders: [1, 2],
+			geo_locations: {
+				countries: ['US']
+			}
+		}),
+		status: 'PAUSED'
+	});
+	const adSet = responseSchema.parse(adSetResponse);
+
+	// Create ad creative
+	const creativeResponse = await event.locals.facebook.post<unknown>(
+		`/${adAccountId}/adcreatives`,
+		{
+			object_story_id: params.postId
+		}
+	);
+	const creative = responseSchema.parse(creativeResponse);
+
+	// Create ad
+	await event.locals.facebook.post(`/${adAccountId}/ads`, {
+		name: `${params.name} Ad`,
+		adset_id: adSet.id,
+		creative: JSON.stringify({ creative_id: creative.id }),
+		status: 'PAUSED'
+	});
+
+	return { success: true };
 };
