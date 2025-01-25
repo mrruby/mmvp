@@ -1,6 +1,6 @@
 import { createCampaign, createAdSet, createAdCreative, createAd } from './facebook/ads';
 import { uploadAdImage } from './facebook/media';
-import { type CampaignData, campaignDataSchema } from '$lib/schemas/campaign';
+import { type CampaignData, campaignDataSchema } from '$lib/schemas';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export const validateCampaignData = (data: unknown): data is CampaignData => {

@@ -1,4 +1,4 @@
-import { adImageResponseSchema } from '$lib/schemas/facebook';
+import { adImageResponseSchema } from '$lib/schemas';
 import type { RequestEvent } from '@sveltejs/kit';
 import { AdImage } from 'facebook-nodejs-business-sdk';
 

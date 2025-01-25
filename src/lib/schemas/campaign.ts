@@ -66,9 +66,47 @@ export const createAdParamsSchema = z.object({
 	creativeId: z.string(),
 	instagramActorId: z.string()
 });
+export const campaignListSchema = z.object({
+	data: z.array(
+		z.object({
+			id: z.string(),
+			name: z.string(),
+			status: z.enum(['ACTIVE', 'PAUSED', 'DELETED', 'ARCHIVED']),
+			effective_status: z.string(),
+			adsets: z
+				.object({
+					data: z.array(
+						z.object({
+							destination_type: z.string()
+						})
+					)
+				})
+				.optional(),
+			ads: z
+				.object({
+					data: z.array(
+						z.object({
+							creative: z
+								.object({
+									id: z.string(),
+									thumbnail_url: z.string().optional(),
+									image_url: z.string().optional(),
+									body: z.string().optional(),
+									object_story_spec: z.record(z.unknown()).optional(),
+									asset_feed_spec: z.record(z.unknown()).optional()
+								})
+								.optional()
+						})
+					)
+				})
+				.optional()
+		})
+	)
+});
 
 export type CampaignData = z.infer<typeof campaignDataSchema>;
 export type CreateCampaignParams = z.infer<typeof createCampaignParamsSchema>;
 export type CreateAdSetParams = z.infer<typeof createAdSetParamsSchema>;
 export type CreateAdCreativeParams = z.infer<typeof createAdCreativeParamsSchema>;
 export type CreateAdParams = z.infer<typeof createAdParamsSchema>;
+export type CampaignList = z.infer<typeof campaignListSchema>;

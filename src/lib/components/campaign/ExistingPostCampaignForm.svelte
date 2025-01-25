@@ -6,7 +6,7 @@
 		InstagramPost,
 		FacebookPageWithInstagram,
 		InstagramAccountDetails
-	} from '$lib/schemas/facebook';
+	} from '$lib/schemas';
 
 	type Props = {
 		data: {

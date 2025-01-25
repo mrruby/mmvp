@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CampaignList } from '$lib/schemas/facebook';
+	import type { CampaignList } from '$lib/schemas';
 	import { enhance } from '$app/forms';
 
 	let { campaigns, adAccountId }: { campaigns: CampaignList['data']; adAccountId: string } =

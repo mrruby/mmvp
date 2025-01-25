@@ -7,7 +7,7 @@ import {
 	instagramAccountsResponseSchema,
 	instagramMediaResponseSchema,
 	instagramConnectedPageSchema
-} from '$lib/schemas/facebook';
+} from '$lib/schemas';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export const fetchAdAccounts = async (event: RequestEvent) => {

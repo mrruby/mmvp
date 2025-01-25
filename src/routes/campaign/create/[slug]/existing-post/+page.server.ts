@@ -12,7 +12,7 @@ import type {
 	FacebookPageWithInstagram,
 	InstagramAccountDetails,
 	InstagramPost
-} from '$lib/schemas/facebook';
+} from '$lib/schemas';
 
 function checkInstagramConnection(
 	page: FacebookPageWithInstagram,

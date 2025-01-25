@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AdAccount } from '$lib/schemas/facebook';
+	import type { AdAccount } from '$lib/schemas';
 
 	let { adAccounts }: { adAccounts: AdAccount[] } = $props();
 </script>

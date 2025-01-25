@@ -7,9 +7,11 @@ import {
 	createCampaignParamsSchema,
 	createAdSetParamsSchema,
 	createAdCreativeParamsSchema,
-	createAdParamsSchema
-} from '$lib/schemas/campaign';
-import { campaignListSchema, responseSchema, type LinkData } from '$lib/schemas/facebook';
+	createAdParamsSchema,
+	campaignListSchema,
+	responseSchema,
+	type LinkData
+} from '$lib/schemas';
 
 export const createCampaign = async (
 	event: RequestEvent,
