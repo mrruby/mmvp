@@ -1,13 +1,13 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 import type { User } from '@auth/core/types';
-import type { FacebookClient } from '$lib/types';
+import type { FacebookSDK } from '$lib/server/facebook-sdk';
 
 declare global {
 	namespace App {
 		interface Locals {
 			auth(): Promise<{ accessToken?: string; user: User } | null>;
-			facebook?: FacebookClient;
+			facebook?: FacebookSDK;
 		}
 		// interface Error {}
 		// interface PageData {}

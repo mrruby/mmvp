@@ -9,7 +9,7 @@ import {
 	createAdCreativeParamsSchema,
 	createAdParamsSchema
 } from '$lib/schemas/campaign';
-import { campaignListSchema, responseSchema } from '$lib/schemas/facebook';
+import { campaignListSchema, responseSchema, type LinkData } from '$lib/schemas/facebook';
 
 export const createCampaign = async (
 	event: RequestEvent,
@@ -21,13 +21,17 @@ export const createCampaign = async (
 	}
 
 	const validatedParams = createCampaignParamsSchema.parse(params);
-	const response = await event.locals.facebook.post(`/${adAccountId}/campaigns`, {
+	const { AdAccount } = event.locals.facebook;
+	const account = new AdAccount(adAccountId);
+
+	const campaign = await account.createCampaign(['id', 'name', 'status'], {
 		name: validatedParams.name,
 		objective: validatedParams.objective,
 		status: validatedParams.status,
-		special_ad_categories: '[]'
+		special_ad_categories: []
 	});
-	return responseSchema.parse(response);
+
+	return responseSchema.parse(campaign);
 };
 
 export const createAdSet = async (
@@ -40,18 +44,22 @@ export const createAdSet = async (
 	}
 
 	const validatedParams = createAdSetParamsSchema.parse(params);
-	const response = await event.locals.facebook.post(`/${adAccountId}/adsets`, {
+	const { AdAccount } = event.locals.facebook;
+	const account = new AdAccount(adAccountId);
+
+	const adSet = await account.createAdSet(['id', 'name', 'status'], {
 		name: validatedParams.name,
 		campaign_id: validatedParams.campaignId,
 		daily_budget: validatedParams.dailyBudget,
 		bid_amount: '2',
 		billing_event: 'IMPRESSIONS',
 		destination_type: validatedParams.destination_type,
-		targeting: JSON.stringify(validatedParams.targeting),
+		targeting: validatedParams.targeting,
 		status: 'PAUSED',
 		optimization_goal: 'LINK_CLICKS'
 	});
-	return responseSchema.parse(response);
+
+	return responseSchema.parse(adSet);
 };
 
 export const createAdCreative = async (
@@ -64,30 +72,52 @@ export const createAdCreative = async (
 	}
 
 	const validatedParams = createAdCreativeParamsSchema.parse(params);
+	const { AdAccount } = event.locals.facebook;
+	const account = new AdAccount(adAccountId);
 
-	const response = await event.locals.facebook.post(`/${adAccountId}/adcreatives`, {
-		name: validatedParams.name,
-		object_story_spec: JSON.stringify({
-			instagram_actor_id: validatedParams.object_story_spec.instagram_actor_id,
-			page_id: validatedParams.object_story_spec.page_id,
-			link_data: {
-				image_hash: validatedParams.object_story_spec.link_data.image_hash,
-				message: validatedParams.object_story_spec.link_data.message,
-				call_to_action: {
-					type: 'VIEW_INSTAGRAM_PROFILE'
-				},
-				link: `https://www.instagram.com/${validatedParams.object_story_spec.instagram_username}/`
-			}
-		}),
-		degrees_of_freedom_spec: JSON.stringify({
-			creative_features_spec: {
-				standard_enhancements: {
-					enroll_status: 'OPT_OUT'
+	// If we're using an existing post
+	if (validatedParams.object_story_id) {
+		const creative = await account.createAdCreative(['id', 'name'], {
+			name: validatedParams.name,
+			object_story_id: validatedParams.object_story_id
+		});
+		return responseSchema.parse(creative);
+	}
+
+	// If we're creating a new ad with an uploaded image
+	if (validatedParams.object_story_spec) {
+		const linkData: LinkData = {
+			message: validatedParams.object_story_spec.link_data.message,
+			call_to_action: {
+				type: 'VIEW_INSTAGRAM_PROFILE'
+			},
+			link: `https://www.instagram.com/${validatedParams.object_story_spec.instagram_username}/`
+		};
+
+		// Only add image_hash if it's provided
+		if (validatedParams.object_story_spec.link_data.image_hash) {
+			linkData.image_hash = validatedParams.object_story_spec.link_data.image_hash;
+		}
+
+		const creative = await account.createAdCreative(['id', 'name'], {
+			name: validatedParams.name,
+			object_story_spec: {
+				instagram_actor_id: validatedParams.object_story_spec.instagram_actor_id,
+				page_id: validatedParams.object_story_spec.page_id,
+				link_data: linkData
+			},
+			degrees_of_freedom_spec: {
+				creative_features_spec: {
+					standard_enhancements: {
+						enroll_status: 'OPT_OUT'
+					}
 				}
 			}
-		})
-	});
-	return responseSchema.parse(response);
+		});
+		return responseSchema.parse(creative);
+	}
+
+	throw new Error('Invalid ad creative parameters');
 };
 
 export const createAd = async (
@@ -100,13 +130,18 @@ export const createAd = async (
 	}
 
 	const validatedParams = createAdParamsSchema.parse(params);
-	const response = await event.locals.facebook.post(`/${adAccountId}/ads`, {
+	const { AdAccount } = event.locals.facebook;
+	const account = new AdAccount(adAccountId);
+
+	const ad = await account.createAd(['id', 'name', 'status'], {
 		name: validatedParams.name,
 		adset_id: validatedParams.adsetId,
-		creative: JSON.stringify({ creative_id: validatedParams.creativeId }),
-		status: 'PAUSED'
+		creative: { creative_id: validatedParams.creativeId },
+		status: 'PAUSED',
+		instagram_actor_id: validatedParams.instagramActorId
 	});
-	return responseSchema.parse(response);
+
+	return responseSchema.parse(ad);
 };
 
 export const fetchCampaigns = async (event: RequestEvent, adAccountId: string) => {
@@ -114,12 +149,19 @@ export const fetchCampaigns = async (event: RequestEvent, adAccountId: string) =
 		throw new Error('Facebook service not available');
 	}
 
-	const response = await event.locals.facebook.get<unknown>(
-		`/${adAccountId}/campaigns`,
-		'id,name,status,effective_status,adsets{destination_type},ads{creative{id,thumbnail_url,image_url,body,object_story_spec,asset_feed_spec}}'
-	);
+	const { AdAccount } = event.locals.facebook;
+	const account = new AdAccount(adAccountId);
 
-	const validated = campaignListSchema.parse(response);
+	const campaigns = await account.getCampaigns([
+		'id',
+		'name',
+		'status',
+		'effective_status',
+		'adsets{destination_type}',
+		'ads{creative{id,thumbnail_url,image_url,body,object_story_spec,asset_feed_spec}}'
+	]);
+
+	const validated = campaignListSchema.parse({ data: campaigns });
 
 	// Filter campaigns that have at least one adset with INSTAGRAM_PROFILE destination type
 	const instagramCampaigns = validated.data.filter(
@@ -135,11 +177,11 @@ export const deleteCampaign = async (event: RequestEvent, campaignId: string) =>
 		throw new Error('Facebook service not available');
 	}
 
-	const response = await event.locals.facebook.post<{ success: boolean }>(`/${campaignId}`, {
-		status: 'DELETED'
-	});
+	const { Campaign } = event.locals.facebook;
+	const campaign = new Campaign(campaignId);
+	await campaign.delete(['id']);
 
-	return response.success;
+	return true;
 };
 
 export const createExistingPostCampaign = async (
@@ -149,56 +191,58 @@ export const createExistingPostCampaign = async (
 		postId: string;
 		name: string;
 		dailyBudget: string;
+		instagramAccountId: string;
 	}
 ) => {
 	if (!event.locals.facebook) {
 		throw new Error('Facebook service not available');
 	}
 
+	const { AdAccount } = event.locals.facebook;
+	const account = new AdAccount(adAccountId);
+
 	// Create campaign
-	const campaignResponse = await event.locals.facebook.post<unknown>(`/${adAccountId}/campaigns`, {
+	const campaign = await account.createCampaign(['id', 'name', 'status'], {
 		name: params.name,
 		objective: 'POST_ENGAGEMENT',
 		status: 'PAUSED',
-		special_ad_categories: '[]'
+		special_ad_categories: []
 	});
-	const campaign = responseSchema.parse(campaignResponse);
+	const campaignResult = responseSchema.parse(campaign);
 
 	// Create ad set
-	const adSetResponse = await event.locals.facebook.post<unknown>(`/${adAccountId}/adsets`, {
-		campaign_id: campaign.id,
+	const adSet = await account.createAdSet(['id', 'name', 'status'], {
+		campaign_id: campaignResult.id,
 		name: `${params.name} Ad Set`,
 		optimization_goal: 'POST_ENGAGEMENT',
 		billing_event: 'IMPRESSIONS',
 		bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
 		daily_budget: (Number(params.dailyBudget) * 100).toString(), // Convert to cents
-		targeting: JSON.stringify({
+		targeting: {
 			age_min: 18,
 			age_max: 65,
 			genders: [1, 2],
 			geo_locations: {
 				countries: ['US']
 			}
-		}),
+		},
 		status: 'PAUSED'
 	});
-	const adSet = responseSchema.parse(adSetResponse);
+	const adSetResult = responseSchema.parse(adSet);
 
 	// Create ad creative
-	const creativeResponse = await event.locals.facebook.post<unknown>(
-		`/${adAccountId}/adcreatives`,
-		{
-			object_story_id: params.postId
-		}
-	);
-	const creative = responseSchema.parse(creativeResponse);
+	const creative = await account.createAdCreative(['id', 'name'], {
+		object_story_id: params.postId
+	});
+	const creativeResult = responseSchema.parse(creative);
 
 	// Create ad
-	await event.locals.facebook.post(`/${adAccountId}/ads`, {
+	await account.createAd(['id', 'name', 'status'], {
 		name: `${params.name} Ad`,
-		adset_id: adSet.id,
-		creative: JSON.stringify({ creative_id: creative.id }),
-		status: 'PAUSED'
+		adset_id: adSetResult.id,
+		creative: { creative_id: creativeResult.id },
+		status: 'PAUSED',
+		instagram_actor_id: params.instagramAccountId
 	});
 
 	return { success: true };

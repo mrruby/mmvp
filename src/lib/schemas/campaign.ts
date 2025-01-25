@@ -28,23 +28,43 @@ export const createAdSetParamsSchema = z.object({
 	})
 });
 
-export const createAdCreativeParamsSchema = z.object({
-	name: z.string(),
-	object_story_spec: z.object({
-		page_id: z.string(),
-		instagram_actor_id: z.string(),
-		instagram_username: z.string(),
-		link_data: z.object({
-			image_hash: z.string().optional(),
-			message: z.string()
-		})
+export const createAdCreativeParamsSchema = z
+	.object({
+		name: z.string(),
+		object_story_id: z.string().optional(),
+		object_story_spec: z
+			.object({
+				page_id: z.string(),
+				instagram_actor_id: z.string(),
+				instagram_username: z.string(),
+				link_data: z.object({
+					image_hash: z.string().optional(),
+					message: z.string()
+				})
+			})
+			.optional()
 	})
-});
+	.refine(
+		(data) => {
+			// Either object_story_id must be present, or object_story_spec with all required fields
+			if (data.object_story_id) {
+				return data.object_story_spec === undefined;
+			}
+			if (data.object_story_spec) {
+				return data.object_story_id === undefined;
+			}
+			return false;
+		},
+		{
+			message: 'Either object_story_id or complete object_story_spec must be provided, but not both'
+		}
+	);
 
 export const createAdParamsSchema = z.object({
 	name: z.string(),
 	adsetId: z.string(),
-	creativeId: z.string()
+	creativeId: z.string(),
+	instagramActorId: z.string()
 });
 
 export type CampaignData = z.infer<typeof campaignDataSchema>;

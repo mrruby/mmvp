@@ -6,6 +6,7 @@ import {
 	fetchInstagramAccounts,
 	getInstagramConnectedPage
 } from '$lib/utils/facebook/accounts';
+import { createExistingPostCampaign } from '$lib/utils/facebook/ads';
 import type { PageServerLoad } from './$types';
 import type {
 	FacebookPageWithInstagram,
@@ -117,12 +118,23 @@ export const actions = {
 			const name = data.get('name')?.toString();
 			const dailyBudget = data.get('dailyBudget')?.toString();
 			const postId = data.get('postId')?.toString();
+			const instagramAccountId = data.get('instagramAccountId')?.toString();
 
-			if (!name || !dailyBudget || !postId) {
+			if (!name || !dailyBudget || !postId || !instagramAccountId) {
 				throw error(400, 'Missing required fields');
 			}
 
-			// TODO: Add campaign creation logic here
+			const adAccountId = event.params.slug;
+			if (!adAccountId) {
+				throw error(400, 'Missing ad account ID');
+			}
+
+			await createExistingPostCampaign(event, adAccountId, {
+				name,
+				dailyBudget,
+				postId,
+				instagramAccountId
+			});
 
 			return {
 				success: true,

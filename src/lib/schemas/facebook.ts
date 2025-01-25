@@ -45,8 +45,9 @@ export const instagramAccountSchema = z.object({
 	data: z.array(
 		z.object({
 			id: z.string(),
+			ig_id: z.string().optional(),
 			username: z.string(),
-			profile_picture_url: z.string().optional()
+			profile_picture: z.string().optional()
 		})
 	)
 });
@@ -168,6 +169,19 @@ export const instagramAccountDetailsSchema = z.object({
 	profilePicture: z.string().optional()
 });
 
+export const linkDataSchema = z.object({
+	message: z.string(),
+	call_to_action: z.object({
+		type: z.string()
+	}),
+	link: z.string(),
+	image_hash: z.string().optional()
+});
+
+export const adImageResponseSchema = z.object({
+	hash: z.string()
+});
+
 export type AdAccount = z.infer<typeof adAccountSchema>;
 export type FundingSource = z.infer<typeof fundingSourceSchema>;
 export type FacebookPage = z.infer<typeof facebookPageSchema>;
@@ -183,6 +197,7 @@ export type Pages = z.infer<typeof pagesSchema>;
 export type InstagramPost = z.infer<typeof instagramPostSchema>;
 export type FacebookPageWithInstagram = z.infer<typeof facebookPageWithInstagramSchema>;
 export type InstagramAccountDetails = z.infer<typeof instagramAccountDetailsSchema>;
+export type LinkData = z.infer<typeof linkDataSchema>;
 
 // Response schemas for Facebook API endpoints
 export const adAccountsResponseSchema = z.object({
@@ -206,8 +221,9 @@ export const instagramAccountsResponseSchema = z.object({
 	data: z.array(
 		z.object({
 			id: z.string(),
+			ig_id: z.string().optional(),
 			username: z.string(),
-			profile_picture_url: z.string().optional()
+			profile_picture: z.string().optional()
 		})
 	)
 });
@@ -222,3 +238,4 @@ export type PagesResponse = z.infer<typeof pagesResponseSchema>;
 export type BusinessResponse = z.infer<typeof businessResponseSchema>;
 export type InstagramAccountsResponse = z.infer<typeof instagramAccountsResponseSchema>;
 export type InstagramMediaResponse = z.infer<typeof instagramMediaResponseSchema>;
+export type AdImageResponse = z.infer<typeof adImageResponseSchema>;
