@@ -21,9 +21,7 @@ export const instagramBusinessAccountSchema = z.object({
 
 export const instagramConnectedPageSchema = z.object({
 	id: z.string(),
-	name: z.string().optional(),
-	username: z.string(),
-	profile_picture_url: z.string().optional()
+	name: z.string().optional()
 });
 
 export const instagramPostSchema = z.object({

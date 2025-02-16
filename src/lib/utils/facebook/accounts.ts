@@ -5,10 +5,25 @@ import {
 	pagesResponseSchema,
 	businessResponseSchema,
 	instagramAccountsResponseSchema,
-	instagramMediaResponseSchema,
-	instagramConnectedPageSchema
+	instagramMediaResponseSchema
 } from '$lib/schemas';
 import type { RequestEvent } from '@sveltejs/kit';
+
+interface InstagramBusinessDiscoveryResponse {
+	business_discovery?: {
+		media?: {
+			data?: Array<{
+				id: string;
+				caption?: string;
+				media_type: string;
+				media_url?: string;
+				permalink: string;
+				thumbnail_url?: string;
+				timestamp: string;
+			}>;
+		};
+	};
+}
 
 export const fetchAdAccounts = async (event: RequestEvent) => {
 	if (!event.locals.facebook) {
@@ -117,12 +132,8 @@ export const fetchInstagramAccounts = async (event: RequestEvent) => {
 	const instagramAccountsPromises = businessData.data.map(async (business) => {
 		try {
 			const fbBusiness = new Business(String(business.id));
-			const response = await fbBusiness.getInstagramAccounts([
-				'id',
-				'ig_id',
-				'username',
-				'profile_picture'
-			]);
+			const response = await fbBusiness.getInstagramAccounts(['id', 'ig_id', 'username']);
+
 			const validated = instagramAccountsResponseSchema.parse({ data: response });
 			return validated.data;
 		} catch (error) {
@@ -136,7 +147,7 @@ export const fetchInstagramAccounts = async (event: RequestEvent) => {
 	const uniqueAccounts = new Map<string, { id: string; name: string }>();
 	instagramAccountsArrays.flat().forEach((account) => {
 		uniqueAccounts.set(account.id, {
-			id: account.id,
+			id: account.ig_id?.toString() ?? '',
 			name: account.username
 		});
 	});
@@ -144,41 +155,20 @@ export const fetchInstagramAccounts = async (event: RequestEvent) => {
 	return Array.from(uniqueAccounts.values());
 };
 
-export const getInstagramConnectedPage = async (
-	event: RequestEvent,
-	instagramAccountId: string
-) => {
-	if (!event.locals.facebook) {
-		throw new Error('Facebook service not available');
-	}
-
-	const { User } = event.locals.facebook;
-	const me = new User('me');
-
-	// Get the Instagram account details using Graph API
-	const response = await me.get(['id', 'name', 'username', 'profile_picture_url'], {
-		path: `/${instagramAccountId}`
-	});
-
-	return instagramConnectedPageSchema.parse(response);
-};
-
 export const fetchInstagramMedia = async (event: RequestEvent, instagramAccountId: string) => {
 	if (!event.locals.facebook) {
 		throw new Error('Facebook service not available');
 	}
 
-	const { User } = event.locals.facebook;
-	const me = new User('me');
+	const { IGUser } = event.locals.facebook;
+	const instagramUser = new IGUser(instagramAccountId);
 
-	// Get the Instagram media using Graph API
-	const response = await me.get(
-		['id', 'caption', 'media_type', 'media_url', 'thumbnail_url', 'timestamp'],
-		{
-			path: `/${instagramAccountId}/media`
-		}
-	);
+	console.log('instagramUser', instagramUser);
 
-	const validated = instagramMediaResponseSchema.parse(response);
+	const response = await instagramUser.getMedia(['id']);
+
+	console.log('response', response);
+
+	const validated = instagramMediaResponseSchema.parse({ data: mediaData });
 	return validated.data;
 };

@@ -1,226 +1,183 @@
 <script lang="ts">
-	import FormField from './FormField.svelte';
-	import StatusMessage from './StatusMessage.svelte';
 	import { enhance } from '$app/forms';
-	import type {
-		InstagramPost,
-		FacebookPageWithInstagram,
-		InstagramAccountDetails
-	} from '$lib/schemas';
+	import StatusMessage from './StatusMessage.svelte';
+	import FormField from './FormField.svelte';
 
-	type Props = {
+	/**
+	 * Props from the server:
+	 * data.instagramAccounts:
+	 *   an array of { id: string, name: string }
+	 */
+	let { data } = $props<{
 		data: {
-			pages: FacebookPageWithInstagram[];
-			instagramAccounts: InstagramAccountDetails[];
-			hasInstagramPages: boolean;
+			instagramAccounts: Array<{ id: string; name: string }>;
 		};
-	};
-
-	let { data }: Props = $props();
+	}>();
 
 	let loading = $state(false);
 	let error = $state<string | null>(null);
-	let posts = $state<InstagramPost[]>([]);
-	let selectedPageId = $state<string | null>(null);
-	let showPostSelector = $state(false);
-	let selectedPageInstagram = $state<InstagramAccountDetails | null>(null);
 
-	function formatDate(dateString: string) {
-		return new Date(dateString).toLocaleString();
-	}
+	// After loading posts from the server
+	let posts = $state<
+		Array<{
+			id: string;
+			caption?: string;
+			media_type: string;
+			media_url?: string;
+			thumbnail_url?: string;
+			timestamp: string;
+		}>
+	>([]);
 
-	async function handlePageSelection(event: Event) {
-		const select = event.target as HTMLSelectElement;
-		selectedPageId = select.value;
-		selectedPageInstagram = null;
-
-		if (!selectedPageId) {
-			showPostSelector = false;
-			posts = [];
-			return;
-		}
-
-		loading = true;
-		error = null;
-		showPostSelector = false;
-		posts = [];
-
-		try {
-			const formData = new FormData();
-			formData.append('pageId', selectedPageId);
-
-			const response = await fetch('?/loadPosts', {
-				method: 'POST',
-				body: formData
-			});
-
-			const result = await response.json();
-
-			if (result.error) {
-				throw new Error(result.error);
-			}
-
-			selectedPageInstagram = result.instagramDetails;
-			posts = result.posts;
-			showPostSelector = true;
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load Instagram posts';
-		} finally {
-			loading = false;
-		}
-	}
+	let selectedInstagramAccount = $state('');
+	let selectedPostId = $state('');
 </script>
 
 <div class="space-y-4">
-	<h2 class="h2">Create Campaign from Existing Instagram Post</h2>
+	<h2 class="text-xl font-semibold">Create Campaign from Existing Instagram Post</h2>
 
 	{#if error}
 		<StatusMessage type="error" message={error} />
 	{/if}
 
-	{#if !data.hasInstagramPages}
-		<div class="space-y-2 rounded-md border border-yellow-200 bg-yellow-50 p-4">
-			<div class="text-sm text-yellow-700">
-				None of your Facebook pages have Instagram accounts connected. To use existing posts, you
-				need to:
-			</div>
-			<ol class="list-decimal pl-5 text-sm text-yellow-700">
-				<li>Go to your Facebook Business Settings</li>
-				<li>Connect your Instagram account to one of your Facebook pages</li>
-				<li>Make sure the Instagram account is a Business or Creator account</li>
-			</ol>
-		</div>
-	{/if}
-
-	<div class="space-y-4">
-		<label for="page-select" class="block text-sm font-medium text-gray-700">
-			Select Facebook Page
+	<!-- Step 1: Pick Instagram Account -->
+	<div>
+		<label for="instagram-account" class="block text-sm font-medium text-gray-700">
+			Select Instagram Account
 		</label>
-		<select
-			id="page-select"
-			class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-			onchange={handlePageSelection}
-			disabled={loading}
-		>
-			<option value="">Select a page...</option>
-			{#each data.pages as page}
-				<option value={page.id} disabled={!page.hasInstagram}>
-					{page.name}
-					{#if !page.hasInstagram}
-						(No Instagram)
-					{/if}
-				</option>
-			{/each}
-		</select>
+		<form
+			method="POST"
+			action="?/loadPosts"
+			use:enhance={() => {
+				loading = true;
+				error = null;
 
-		{#if selectedPageId && !error}
-			<div class="mt-2">
-				{#if selectedPageInstagram}
-					<div class="flex items-center space-x-2">
-						{#if selectedPageInstagram.profilePicture}
-							<img
-								src={selectedPageInstagram.profilePicture}
-								alt="Instagram profile"
-								class="h-6 w-6 rounded-full"
-							/>
-						{/if}
-						<p class="text-sm text-green-600">
-							✓ Connected to Instagram account: @{selectedPageInstagram.username ||
-								selectedPageInstagram.name}
-						</p>
-					</div>
-				{/if}
-			</div>
-		{/if}
+				return async ({ result }) => {
+					console.log('loadPosts');
+					loading = false;
+					if (result.type === 'error') {
+						error = result.error?.message || 'Error loading posts';
+						posts = [];
+						return;
+					}
+					if (result.type === 'success') {
+						posts = (result.data?.posts as typeof posts) ?? [];
+					}
+				};
+			}}
+		>
+			<select
+				id="instagram-account"
+				name="instagramAccountId"
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+				onchange={(e) => {
+					if (selectedInstagramAccount) {
+						console.log('requestSubmit');
+						e.currentTarget.form?.requestSubmit();
+					}
+				}}
+				bind:value={selectedInstagramAccount}
+				disabled={loading}
+				required
+			>
+				<option value="">-- Choose an Instagram Account --</option>
+				{#each data.instagramAccounts as acc}
+					<option value={acc.id}>{acc.name}</option>
+				{/each}
+			</select>
+		</form>
 	</div>
 
-	{#if loading}
-		<div class="text-center">
-			<div
-				class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"
-			></div>
-			<p class="mt-2 text-sm text-gray-600">Loading posts...</p>
-		</div>
-	{/if}
-
-	{#if showPostSelector && posts.length > 0}
+	<!-- Step 2: If we have posts, let the user pick one + fill out campaign details -->
+	{#if posts.length > 0}
 		<form
 			method="POST"
 			action="?/createCampaign"
 			use:enhance={() => {
 				loading = true;
 				error = null;
-
 				return async ({ result }) => {
 					loading = false;
 					if (result.type === 'error') {
-						error = result.error.message;
+						error = result.error?.message || 'Error creating campaign';
+					} else if (result.type === 'success') {
+						console.log('Campaign created successfully');
 					}
 				};
 			}}
 			class="space-y-6"
 		>
-			<FormField label="Campaign Name" name="name" type="text" required id="campaign-name" />
+			<!-- Hidden field to pass along chosen IG account -->
+			<input type="hidden" name="instagramAccountId" value={selectedInstagramAccount} />
+
 			<FormField
-				label="Daily Budget (USD)"
+				label="Campaign Name"
+				name="name"
+				id="campaign-name"
+				type="text"
+				required
+				placeholder="My Existing Post Campaign"
+			/>
+
+			<FormField
+				label="Daily Budget"
 				name="dailyBudget"
+				id="daily-budget"
 				type="number"
 				min="1"
 				required
-				id="daily-budget"
+				placeholder="10"
+				helpText="Daily budget in your account currency"
 			/>
 
-			<div class="space-y-4">
-				<label for="posts-container" class="block text-sm font-medium text-gray-700"
-					>Select an Instagram Post</label
-				>
-				<div
-					id="posts-container"
-					class="grid gap-4 md:grid-cols-2"
-					role="radiogroup"
-					aria-labelledby="posts-label"
-				>
+			<!-- Post grid radio options -->
+			<div class="space-y-2">
+				<div class="block text-sm font-medium text-gray-700">Select a Post</div>
+				<div class="grid gap-4 md:grid-cols-2">
 					{#each posts as post}
-						<label class="relative block cursor-pointer">
-							<input type="radio" name="postId" value={post.id} class="peer sr-only" required />
-							<div
-								class="rounded-lg border border-gray-200 p-4 hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500"
-							>
-								{#if post.media_url || post.thumbnail_url}
-									<img
-										src={post.media_url ?? post.thumbnail_url}
-										alt="Post preview"
-										class="mb-2 h-48 w-full rounded object-cover"
-									/>
-								{/if}
-								<p class="mb-1 text-sm text-gray-500">
-									{formatDate(post.timestamp)}
-								</p>
-								<p class="text-sm text-gray-700">
-									{post.caption || 'No caption'}
-								</p>
-								<p class="mt-1 text-xs text-gray-500">
-									Type: {post.media_type}
-								</p>
-							</div>
+						<label
+							class="relative block cursor-pointer rounded-lg border border-gray-200 p-2 hover:bg-gray-50"
+							for={`post-${post.id}`}
+						>
+							<input
+								type="radio"
+								name="postId"
+								value={post.id}
+								id={`post-${post.id}`}
+								class="peer sr-only"
+								bind:group={selectedPostId}
+								required
+							/>
+							{#if post.media_url || post.thumbnail_url}
+								<img
+									src={post.media_url ?? post.thumbnail_url}
+									alt="Instagram post"
+									class="mb-2 h-48 w-full rounded object-cover"
+								/>
+							{/if}
+							<p class="line-clamp-2 text-sm text-gray-800">
+								{post.caption || '(No caption)'}
+							</p>
+							<p class="mt-1 text-xs text-gray-500">Type: {post.media_type}</p>
+							<p class="text-xs text-gray-500">{new Date(post.timestamp).toLocaleString()}</p>
 						</label>
 					{/each}
 				</div>
 			</div>
 
-			{#if selectedPageInstagram}
-				<input type="hidden" name="instagramAccountId" value={selectedPageInstagram.id} />
-			{/if}
-
 			<button
 				type="submit"
-				class="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+				class="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
 				disabled={loading}
 			>
-				{loading ? 'Creating Campaign...' : 'Create Campaign'}
+				{loading ? 'Creating...' : 'Create Campaign'}
 			</button>
 		</form>
-	{:else if showPostSelector}
-		<p>No Instagram posts found for this account.</p>
+	{:else if selectedInstagramAccount}
+		<p class="text-sm text-gray-500">No posts found for this Instagram account.</p>
+	{/if}
+
+	{#if loading}
+		<p class="text-sm text-gray-500">Loading...</p>
 	{/if}
 </div>

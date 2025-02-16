@@ -8,7 +8,8 @@ import {
 	AdImage,
 	Page,
 	User,
-	Business
+	Business,
+	IGUser
 } from 'facebook-nodejs-business-sdk';
 
 export type FacebookSDK = {
@@ -21,11 +22,13 @@ export type FacebookSDK = {
 	Page: typeof Page;
 	User: typeof User;
 	Business: typeof Business;
+	api: FacebookAdsApi;
+	IGUser: typeof IGUser;
 };
 
 export function initFacebookSdk(accessToken: string): FacebookSDK {
 	// Initialize the SDK with the user's access token
-	FacebookAdsApi.init(accessToken);
+	const api = FacebookAdsApi.init(accessToken);
 
 	// Return SDK classes for use
 	return {
@@ -37,6 +40,8 @@ export function initFacebookSdk(accessToken: string): FacebookSDK {
 		AdImage,
 		Page,
 		User,
-		Business
+		Business,
+		IGUser,
+		api
 	};
 }

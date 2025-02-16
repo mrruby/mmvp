@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ExistingPostCampaignForm from '$lib/components/campaign/ExistingPostCampaignForm.svelte';
+	import type { PageData } from './$types';
 
-	/** @type {{ data: import('./$types').PageData }} */
-	let { data } = $props();
+	let { data } = $props<{ data: PageData }>();
 </script>
 
 <ExistingPostCampaignForm {data} />

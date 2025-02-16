@@ -1,117 +1,48 @@
 import { error } from '@sveltejs/kit';
-import {
-	fetchPages,
-	getPageInstagramAccount,
-	fetchInstagramMedia,
-	fetchInstagramAccounts,
-	getInstagramConnectedPage
-} from '$lib/utils/facebook/accounts';
+import { fetchInstagramAccounts, fetchInstagramMedia } from '$lib/utils/facebook/accounts';
 import { createExistingPostCampaign } from '$lib/utils/facebook/ads';
-import type { PageServerLoad } from './$types';
-import type {
-	FacebookPageWithInstagram,
-	InstagramAccountDetails,
-	InstagramPost
-} from '$lib/schemas';
-
-function checkInstagramConnection(
-	page: FacebookPageWithInstagram,
-	instagramAccounts: InstagramAccountDetails[]
-): InstagramAccountDetails | null {
-	if (!page.instagramAccountId) return null;
-	return instagramAccounts.find((acc) => acc.id === page.instagramAccountId) ?? null;
-}
+import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	try {
-		// Fetch available Facebook pages and Instagram accounts
-		const [pages, instagramAccounts] = await Promise.all([
-			fetchPages(event),
-			fetchInstagramAccounts(event)
-		]);
+		// Fetch Instagram accounts
+		const instagramAccounts = await fetchInstagramAccounts(event);
 
-		// Get details for each Instagram account
-		const instagramConnections = await Promise.all(
-			instagramAccounts.map(async (acc) => {
-				try {
-					const details = await getInstagramConnectedPage(event, acc.id);
-					return {
-						...acc,
-						username: details.username,
-						profilePicture: details.profile_picture_url
-					};
-				} catch (e) {
-					console.error(`Failed to get details for Instagram account ${acc.id}:`, e);
-					return acc;
-				}
-			})
-		);
-
-		// Transform pages data and validate Instagram connections
-		const transformedPages: FacebookPageWithInstagram[] = pages.map((page) => ({
-			id: page.id,
-			name: page.name,
-			hasInstagram: !!page.instagram_business_account,
-			instagramAccountId: page.instagram_business_account?.id
-		}));
-
-		// Return pages with their Instagram connection status
 		return {
-			pages: transformedPages,
-			instagramAccounts: instagramConnections as InstagramAccountDetails[],
-			hasInstagramPages: transformedPages.some(
-				(page) =>
-					page.hasInstagram &&
-					checkInstagramConnection(page, instagramConnections as InstagramAccountDetails[])
-			)
+			instagramAccounts
 		};
 	} catch (e) {
-		console.error('Error loading Facebook pages:', e);
-		throw error(500, 'Failed to load Facebook pages');
+		console.error('Error loading Instagram accounts:', e);
+		throw error(500, 'Failed to load Instagram accounts');
 	}
 };
 
-export const actions = {
+export const actions: Actions = {
+	// 1) Action that loads posts for the selected Instagram account
 	loadPosts: async (event) => {
 		try {
+			console.log('loadPosts');
 			const data = await event.request.formData();
-			const pageId = data.get('pageId')?.toString();
+			const instagramAccountId = data.get('instagramAccountId')?.toString();
 
-			if (!pageId) {
-				throw error(400, 'Page ID is required');
+			if (!instagramAccountId) {
+				throw error(400, 'Missing Instagram account ID');
 			}
 
-			// Get Instagram account connected to the page
-			const instagramAccount = await getPageInstagramAccount(event, pageId);
-
-			if (!instagramAccount) {
-				throw error(400, 'Selected page has no Instagram account connected');
-			}
-
-			// Get Instagram account details
-			const instagramDetails = await getInstagramConnectedPage(event, instagramAccount.id);
-
-			// Fetch Instagram posts
-			const posts = await fetchInstagramMedia(event, instagramAccount.id);
+			// Fetch that account's posts
+			const posts = await fetchInstagramMedia(event, instagramAccountId);
 
 			return {
 				success: true,
-				posts: posts as InstagramPost[],
-				instagramAccountId: instagramAccount.id,
-				instagramUsername: instagramDetails.username,
-				instagramDetails: {
-					id: instagramAccount.id,
-					name: instagramDetails.name || instagramDetails.username,
-					username: instagramDetails.username,
-					profilePicture: instagramDetails.profile_picture_url
-				} as InstagramAccountDetails
+				posts
 			};
 		} catch (e) {
-			console.error('Error loading Instagram posts:', e);
+			console.error('Error loading posts:', e);
 			throw error(500, e instanceof Error ? e.message : 'Failed to load Instagram posts');
 		}
 	},
 
+	// 2) Action that creates the campaign from an existing post
 	createCampaign: async (event) => {
 		try {
 			const data = await event.request.formData();

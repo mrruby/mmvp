@@ -42,9 +42,8 @@ export const instagramAccountsResponseSchema = z.object({
 	data: z.array(
 		z.object({
 			id: z.string(),
-			ig_id: z.string().optional(),
-			username: z.string(),
-			profile_picture: z.string().optional()
+			ig_id: z.number().optional(),
+			username: z.string()
 		})
 	)
 });
